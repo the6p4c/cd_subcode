@@ -16,9 +16,7 @@ pub struct SubcodeSymbol(pub u8);
 
 impl SubcodeSymbol {
     /// Retrieves the value of a bit within the subcode symbol.
-    ///
-    /// Returns true for a 1 bit, false for a 0 bit.
-    pub fn get_bit(&self, subcode_bit: SubcodeBit) -> bool {
+    pub fn get_bit_value(&self, subcode_bit: SubcodeBit) -> u8 {
         let bit = match subcode_bit {
             SubcodeBit::P => 7,
             SubcodeBit::Q => 6,
@@ -30,9 +28,14 @@ impl SubcodeSymbol {
             SubcodeBit::W => 0,
         };
 
-        let bit_value = (self.0 >> bit) & 1;
+        (self.0 >> bit) & 1
+    }
 
-        match bit_value {
+    /// Retrieves the value of a bit within the subcode symbol, as a bool.
+    ///
+    /// Returns true for a 1 bit, false for a 0 bit.
+    pub fn get_bit(&self, subcode_bit: SubcodeBit) -> bool {
+        match self.get_bit_value(subcode_bit) {
             0 => false,
             1 => true,
             _ => panic!("bit value was not 0 or 1 (this shouldn't happen)"),
@@ -60,18 +63,56 @@ impl fmt::Debug for SubcodeSymbol {
             "".into()
         };
 
-        write!(
-            f,
-            "SubcodeSymbol({:#010b}{})",
-            self.0,
-            bit_string
-        )
+        write!(f, "SubcodeSymbol({:#010b}{})", self.0, bit_string)
     }
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn subcode_symbol_get_bit_value_returns_correct_values() {
+        let subcode_symbol = SubcodeSymbol(0b0000_0000);
+        assert_eq!(subcode_symbol.get_bit_value(SubcodeBit::P), 0);
+        assert_eq!(subcode_symbol.get_bit_value(SubcodeBit::Q), 0);
+        assert_eq!(subcode_symbol.get_bit_value(SubcodeBit::R), 0);
+        assert_eq!(subcode_symbol.get_bit_value(SubcodeBit::S), 0);
+        assert_eq!(subcode_symbol.get_bit_value(SubcodeBit::T), 0);
+        assert_eq!(subcode_symbol.get_bit_value(SubcodeBit::U), 0);
+        assert_eq!(subcode_symbol.get_bit_value(SubcodeBit::V), 0);
+        assert_eq!(subcode_symbol.get_bit_value(SubcodeBit::W), 0);
+
+        let subcode_symbol = SubcodeSymbol(0b1111_1111);
+        assert_eq!(subcode_symbol.get_bit_value(SubcodeBit::P), 1);
+        assert_eq!(subcode_symbol.get_bit_value(SubcodeBit::Q), 1);
+        assert_eq!(subcode_symbol.get_bit_value(SubcodeBit::R), 1);
+        assert_eq!(subcode_symbol.get_bit_value(SubcodeBit::S), 1);
+        assert_eq!(subcode_symbol.get_bit_value(SubcodeBit::T), 1);
+        assert_eq!(subcode_symbol.get_bit_value(SubcodeBit::U), 1);
+        assert_eq!(subcode_symbol.get_bit_value(SubcodeBit::V), 1);
+        assert_eq!(subcode_symbol.get_bit_value(SubcodeBit::W), 1);
+
+        let subcode_symbol = SubcodeSymbol(0b1010_1010);
+        assert_eq!(subcode_symbol.get_bit_value(SubcodeBit::P), 1);
+        assert_eq!(subcode_symbol.get_bit_value(SubcodeBit::Q), 0);
+        assert_eq!(subcode_symbol.get_bit_value(SubcodeBit::R), 1);
+        assert_eq!(subcode_symbol.get_bit_value(SubcodeBit::S), 0);
+        assert_eq!(subcode_symbol.get_bit_value(SubcodeBit::T), 1);
+        assert_eq!(subcode_symbol.get_bit_value(SubcodeBit::U), 0);
+        assert_eq!(subcode_symbol.get_bit_value(SubcodeBit::V), 1);
+        assert_eq!(subcode_symbol.get_bit_value(SubcodeBit::W), 0);
+
+        let subcode_symbol = SubcodeSymbol(0b0101_0101);
+        assert_eq!(subcode_symbol.get_bit_value(SubcodeBit::P), 0);
+        assert_eq!(subcode_symbol.get_bit_value(SubcodeBit::Q), 1);
+        assert_eq!(subcode_symbol.get_bit_value(SubcodeBit::R), 0);
+        assert_eq!(subcode_symbol.get_bit_value(SubcodeBit::S), 1);
+        assert_eq!(subcode_symbol.get_bit_value(SubcodeBit::T), 0);
+        assert_eq!(subcode_symbol.get_bit_value(SubcodeBit::U), 1);
+        assert_eq!(subcode_symbol.get_bit_value(SubcodeBit::V), 0);
+        assert_eq!(subcode_symbol.get_bit_value(SubcodeBit::W), 1);
+    }
 
     #[test]
     fn subcode_symbol_get_bit_returns_correct_values() {
