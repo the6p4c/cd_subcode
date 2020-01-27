@@ -1,4 +1,5 @@
 use crate::subcode::{SubcodeBit, SubcodeSymbol};
+use crc16;
 
 const CHANNEL_Q_LEN_SYMBOLS: usize = 96;
 const DATA_Q_LEN_SYMBOLS: usize = 72;
@@ -109,6 +110,18 @@ impl ChannelQ<'_> {
 
     pub fn crc(&self) -> u16 {
         self.value(80, 16) as u16
+    }
+
+    pub fn expected_crc(&self) -> u16 {
+        let bytes = (0..=9)
+            .map(|x| self.value(x * 8, 8) as u8)
+            .collect::<Vec<_>>();
+
+        !crc16::State::<crc16::XMODEM>::calculate(&bytes)
+    }
+
+    pub fn crc_matches(&self) -> bool {
+        self.crc() == self.expected_crc()
     }
 
     pub fn as_mode1(&self) -> Option<ChannelQMode1<'_>> {

@@ -22,47 +22,54 @@ fn main() -> io::Result<()> {
 
         let channel_q = ChannelQ::new(&frame_symbols);
         println!(
-            "control: {:#06b}, address: {:?}, crc: {:#018b}",
+            "control: {:#06b}, address: {:?}, crc: {:#018b}{}",
             channel_q.control(),
             channel_q.adr(),
-            channel_q.crc()
+            channel_q.crc(),
+            if channel_q.crc_matches() {
+                ""
+            } else {
+                " (crc fail)"
+            }
         );
 
-        if let Some(mode1) = channel_q.as_mode1() {
-            println!("\ttrack number: {}", mode1.tno());
+        if channel_q.crc_matches() {
+            if let Some(mode1) = channel_q.as_mode1() {
+                println!("\ttrack number: {}", mode1.tno());
 
-            println!(
-                "\ttrack running time: {:02}:{:02}:{:02} (mm:ss:ff)",
-                mode1.min(),
-                mode1.sec(),
-                mode1.frame()
-            );
+                println!(
+                    "\ttrack running time: {:02}:{:02}:{:02} (mm:ss:ff)",
+                    mode1.min(),
+                    mode1.sec(),
+                    mode1.frame()
+                );
 
-            // track number is 0 during lead-in track
-            if mode1.tno() != 0 {
-                println!(
-                    "\tdisc running time:  {:02}:{:02}:{:02} (mm:ss:ff)",
-                    mode1.a_p_min(),
-                    mode1.a_p_sec(),
-                    mode1.a_p_frame()
-                );
-            } else {
-                println!(
-                    "\tpoint = {}, track running time {:02}:{:02}:{:02} (mm:ss:ff)",
-                    mode1.point(),
-                    mode1.a_p_min(),
-                    mode1.a_p_sec(),
-                    mode1.a_p_frame()
-                );
+                // track number is 0 during lead-in track
+                if mode1.tno() != 0 {
+                    println!(
+                        "\tdisc running time:  {:02}:{:02}:{:02} (mm:ss:ff)",
+                        mode1.a_p_min(),
+                        mode1.a_p_sec(),
+                        mode1.a_p_frame()
+                    );
+                } else {
+                    println!(
+                        "\tpoint = {}, track running time {:02}:{:02}:{:02} (mm:ss:ff)",
+                        mode1.point(),
+                        mode1.a_p_min(),
+                        mode1.a_p_sec(),
+                        mode1.a_p_frame()
+                    );
+                }
+            } else if let Some(mode2) = channel_q.as_mode2() {
+                println!("\tcatalogue number: {}", mode2.catalogue_number());
+            } else if let Some(mode3) = channel_q.as_mode3() {
+                println!("\tisrc: {}", mode3.isrc());
+                println!("\t\tcountry code: {}", mode3.country_code());
+                println!("\t\towner code: {}", mode3.owner_code());
+                println!("\t\tyear: {}", mode3.year());
+                println!("\t\tserial number: {}", mode3.serial_number());
             }
-        } else if let Some(mode2) = channel_q.as_mode2() {
-            println!("\tcatalogue number: {}", mode2.catalogue_number());
-        } else if let Some(mode3) = channel_q.as_mode3() {
-            println!("\tisrc: {}", mode3.isrc());
-            println!("\t\tcountry code: {}", mode3.country_code());
-            println!("\t\towner code: {}", mode3.owner_code());
-            println!("\t\tyear: {}", mode3.year());
-            println!("\t\tserial number: {}", mode3.serial_number());
         }
     }
 
